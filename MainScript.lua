@@ -7,7 +7,7 @@ local utils = {}
 local Polaris_user = getgenv().PolarisUser or "Developer"
 local canLoadPolaris = true--getgenv().EOIFHEIUFHu0e98fekwjfbnweiurghfueiyrgy9re088ug
 local hurttime = 0
-local PolarisRelease = "2.07"
+local PolarisRelease = "2.08 Beta"
 
 if not canLoadPolaris then return end
 
@@ -162,7 +162,7 @@ local arraylist = {
 		}):Play()
 
         if library.Array.Transparency then
-		    item.BackgroundTransparency = library.Array.Background and 0.48 or 1
+		    item.BackgroundTransparency = library.Array.Background and 0.52 or 1
         else
             item.BackgroundTransparency = library.Array.Background and 0.3 or 1
         end
@@ -732,10 +732,15 @@ Killaura = Combat.NewButton({
                     local nearestPrimaryPartPosition = nearestCharacter.PrimaryPart.Position
                     local selfPrimaryPartPosition = PrimaryPart.Position
                     local weapon = getBestWeapon()
-                    spoofHand(weapon.Name)
+                    
+                    if ToolCheck.Enabled then
+                        print('enabled 🤑')
+                    else
+                        spoofHand(weapon.Name)
+                    end
 
-                    task.spawn(	function()
-                        for i = 1,1 do
+                    task.spawn(function()
+                        for i = 1, 1 do
                             AuraRemote:FireServer({
                                 chargedAttack = {
                                     chargeRatio = 0
@@ -751,7 +756,7 @@ Killaura = Combat.NewButton({
                                     },
                                     selfPosition = {
                                         value = selfPrimaryPartPosition
-                                    }
+                                    },
                                 },
                                 weapon = weapon
                             })
@@ -759,8 +764,6 @@ Killaura = Combat.NewButton({
                     end)
                 end
             end)
-
-
 
 			task.spawn(function()
 				repeat task.wait(0)
@@ -874,6 +877,10 @@ TargetHudMode = Killaura.NewPicker({
 	Name = "TargetHud",
 	Options = {"None", "Basic", "Basic2"}
 })
+ToolCheck = Killaura.NewToggle({
+	Name = "ToolCheck",
+	Function = function() end
+})
 
 table.insert(spawnConnections,function(char)
 	task.wait(1)
@@ -981,9 +988,9 @@ ImageESPStyle = ImageESP.NewPicker({
 })
 
 local infFlyPart
+local InfiniteFlyConnection
 InfiniteFly = Motion.NewButton({
 	Name = "InfiniteFly",
-    Keybind = Enum.KeyCode.H,
 	Function = function(callback)
 		if callback then
 			infFlyPart = Instance.new("Part",workspace)
@@ -996,9 +1003,10 @@ InfiniteFly = Motion.NewButton({
             elseif not RootPartShow.Enabled then
 			    infFlyPart.Transparency = 1
             end
-			PrimaryPart.CFrame += Vector3.new(0,1000000,0)
+			PrimaryPart.CFrame += Vector3.new(0,1000000)
 			CurrentCamera.CameraSubject = infFlyPart
-			repeat task.wait()
+			InfiniteFlyConnection = RunService.Heartbeat:Connect(function()
+                task.wait()
 				if PrimaryPart.Position.Y < infFlyPart.Position.Y then
 					PrimaryPart.CFrame += Vector3.new(0,1000000,0)
 				end
@@ -1011,12 +1019,12 @@ InfiniteFly = Motion.NewButton({
 				end
 
 				infFlyPart.CFrame = CFrame.new(PrimaryPart.CFrame.X,infFlyPart.CFrame.Y,PrimaryPart.CFrame.Z)
-			until not InfiniteFly.Enabled
+            end)
 
 		else
 			pcall(function()
-
-				for i = 1,10 do task.wait(0.01)
+                InfiniteFlyConnection:Disconnect()
+				for i = 1,15 do task.wait(0.01)
 					PrimaryPart.Velocity = Vector3.new(0,0,0)
 					PrimaryPart.CFrame = infFlyPart.CFrame
 				end
@@ -1118,7 +1126,7 @@ HUD = Visuals.NewButton({
 				end
 				library.Array.SortMode = ArraySortStyle.Option
                 if library.Array.Transparency then
-				    library.Array.BackgroundTransparency = 0.48
+				    library.Array.BackgroundTransparency = 0.52
                 else
                     library.Array.BackgroundTransparency = 0.3
                 end
@@ -1134,7 +1142,7 @@ HUD = Visuals.NewButton({
 	end,
 })
 DeeperTransparency = HUD.NewToggle({
-	Name = "DeeperTransparency",
+	Name = "MoreTransparency",
 	Function = function(v)
 		library.Array.Transparency = v
 		for i = 1, 2 do
@@ -1541,15 +1549,16 @@ local function shoot(bow, pos)
 	ProjectileFire:InvokeServer({
 		[1] = bow,
 		[2] = bow.Name,
-		[3] = pos,
-		[4] = shootFormulaStart,
-		[5] = Vector3.new(0,-5,0),
-		[6] = tostring(game:GetService("HttpService"):GenerateGUID(true)),
-		[7] = {
+        [3] = bow.Name,
+		[4] = pos,
+		[5] = shootFormulaStart,
+		[6] = Vector3.new(0,-5,0),
+		[7] = tostring(game:GetService("HttpService"):GenerateGUID(true)),
+		[8] = {
             ["drawDurationSeconds"] = 1,
 			["shotId"] = tostring(game:GetService("HttpService"):GenerateGUID(false))
 		},
-		[8] =  workspace:GetServerTimeNow() - 0.045
+		[9] =  workspace:GetServerTimeNow() - 0.045
 	})
 end
 
@@ -1990,11 +1999,20 @@ Camera = Visuals.NewButton({
 			CameraModificationCon = RunService.Heartbeat:Connect(function()
 				CurrentCamera.FieldOfView = 120
 			end)
+            if CameraZoom.Enabled then
+                game.Players.LocalPlayer.CameraMaxZoomDistance = CameraZoom.Value
+            else
+                game.Players.LocalPlayer.CameraMaxZoomDistance = 13
+            end
 		else
 			CameraModificationCon:Disconnect()
 			CurrentCamera.FieldOfView = oldFOV
 		end
 	end,
+})
+CameraZoom = Camera.NewToggle({
+	Name = "CameraZoom",
+	Function = function() end
 })
 
 LongJump = Motion.NewButton({
@@ -2003,10 +2021,10 @@ LongJump = Motion.NewButton({
 	Function = function(callback)
 		if callback then
 			if LongJumpMethod.Option == "Boost" then
-				TweenService:Create(PrimaryPart, TweenInfo.new(2.3), {
+				TweenService:Create(PrimaryPart, TweenInfo.new(2.2), {
 					CFrame = PrimaryPart.CFrame + PrimaryPart.CFrame.LookVector * 50 + Vector3.new(0, 5, 0)
 				}):Play()
-				task.delay(0.85, function()
+				task.delay(0.8, function()
 					LongJump.ToggleButton(false)
 				end)
 			end
@@ -2296,4 +2314,54 @@ PartyPopper = RemoteTrollage.NewToggle({
 YuziDash = RemoteTrollage.NewToggle({
 	Name = "YuziDash",
 	Function = function() end
+})
+
+--[[Uninject = Misc.NewButton({
+	Name = "Uninject",
+	Function = function(callback)
+		if callback then
+			task.wait(0.5)
+			for i,v in pairs(library.Modules) do
+				v(false)
+			end
+			library:Remove()
+			canLoadPolaris = false
+		end
+	end,
+})--]]
+
+local humanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+FastFall = Misc.NewButton({
+	Name = "FastFall",
+	Function = function(callback)
+		if Character and humanoidRootPart then
+            if callback then
+                if FallMode.Option == "Velocity" then
+                    humanoidRootPart.Velocity = Vector3.new(0, -999, 0)
+                elseif FallMode.Option == "Gravity" then
+                    workspace.Gravity = -999
+                end
+            else
+                workspace.Gravity = 196.2
+            end
+		end
+	end,
+})
+LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+    Character = newCharacter
+    humanoidRootPart = newCharacter:WaitForChild("HumanoidRootPart")
+    if not FastFall.Enabled then
+        workspace.Gravity = 196.2
+    end
+end)
+
+LocalPlayer.CharacterRemoving:Connect(function()
+    Character = nil
+    humanoidRootPart = nil
+    workspace.Gravity = 196.2
+end)
+
+FallMode = FastFall.NewPicker({
+    Name = "Mode",
+    Options = {"Velocity", "Gravity"}
 })

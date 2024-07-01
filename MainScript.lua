@@ -7,7 +7,7 @@ local utils = {}
 local Polaris_user = getgenv().PolarisUser or "Developer"
 local canLoadPolaris = true--getgenv().EOIFHEIUFHu0e98fekwjfbnweiurghfueiyrgy9re088ug
 local hurttime = 0
-local PolarisRelease = "2.08 Beta"
+local PolarisRelease = "2.08"
 
 if not canLoadPolaris then return end
 
@@ -27,6 +27,8 @@ RunService = game["Run Service"]
 TweenService = game.TweenService
 DefaultChatSystemChatEvents = ReplicatedStorage:WaitForChild("DefaultChatSystemChatEvents")
 inventory = workspace[LocalPlayer.Name].InventoryFolder.Value
+local inventory = workspace[LocalPlayer.Name].InventoryFolder.Value
+local CollectionService = game:GetService("CollectionService")
 
 local config = {
 	Buttons = {},
@@ -50,9 +52,9 @@ if not isfile("Polaris/config.json") then
 	saveConfig()
 end
 
-task.wait(0.1)
+task.wait(0.001)
 loadConfig()
-task.wait(0.1)
+task.wait(0.001)
 
 sethiddenproperty = function(X,Y,Z)
 	pcall(function()
@@ -721,7 +723,6 @@ local auraConnection
 local targetInfo = Instance.new("TextLabel",ScreenGui)
 Killaura = Combat.NewButton({
 	Name = "Killaura",
-	Keybind = Enum.KeyCode.X,
 	Function = function(callback)
 		if callback then
             auraConnection = RunService.Heartbeat:Connect(function()
@@ -1588,7 +1589,7 @@ end
 						local bows = getAllBows()
 						for i,v in pairs(bows) do
 							spoofHand(v.Name)
-							task.wait(.05)
+							task.wait()
 							if v.Name == "fireball" or v.Name == "snowball" and not AllProjectiles.Enabled then
 								continue
 							end
@@ -2208,7 +2209,7 @@ local chatMessages = {
 		--"Go to .gg/WmSzPSDU to get Polaris..~",
 		--"Come get me and maybe you'll get Polaris.. x-x",
 		"Polaris > Protosense~ (its a logger :3)",
-        "Polaris > Cocosploit~ (the scri- uwu~pt skidded off of polaris :3)"
+        "Polaris > Cocosploit~ (the scri- uwu~pt skidded off of polaris and autumn :3)"
 	},
 	TheHood = {
 		"I'm from the hood yo, go get Polaris today.",
@@ -2237,10 +2238,21 @@ ChatSpammerMode = Chatspammer.NewPicker({
 	Options = {"Polaris", "UWU", "TheHood"}
 })
 
-local DisablerConnection
+local DisablerConnection = nil
 local lplr = game.Players.LocalPlayer
+local RunService = game:GetService("RunService")
+
 local humanoid = lplr.Character and lplr.Character:FindFirstChildOfClass("Humanoid")
-local Disabler = Exploit.NewButton({
+lplr.CharacterAdded:Connect(function(character)
+    humanoid = character:FindFirstChildOfClass("Humanoid")
+    character.ChildAdded:Connect(function(child)
+        if child:IsA("Humanoid") then
+            humanoid = child
+        end
+    end)
+end)
+
+Disabler = Exploit.NewButton({
     Name = "SemiFloatDisabler",
     Function = function(callback)
         if callback then
@@ -2248,30 +2260,38 @@ local Disabler = Exploit.NewButton({
                 DisablerConnection = RunService.Heartbeat:Connect(function()
                     if humanoid then
                         if DisablerMethod.Option == "State" then
-                            humanoid:ChangeState(Enum.HumanoidStateType.Ragdoll)
+                            humanoid:ChangeState(Enum.HumanoidStateType.FallingDown)
                             humanoid:ChangeState(Enum.HumanoidStateType.Running)
+                            humanoid:ChangeState(Enum.HumanoidStateType.Freefall)
+                            humanoid:ChangeState(Enum.HumanoidStateType.Landed)
                         elseif DisablerMethod.Option == "State2" then
+                            humanoid:ChangeState(Enum.HumanoidStateType.FallingDown)
                             humanoid:ChangeState(Enum.HumanoidStateType.Seated)
+                            humanoid:ChangeState(Enum.HumanoidStateType.FallingDown)
                             humanoid:ChangeState(Enum.HumanoidStateType.Running)
+                            humanoid:ChangeState(Enum.HumanoidStateType.FallingDown)
                             humanoid:ChangeState(Enum.HumanoidStateType.Climbing)
+                            humanoid:ChangeState(Enum.HumanoidStateType.FallingDown)
                             humanoid:ChangeState(Enum.HumanoidStateType.Running)
+                        elseif DisablerMethod.Option == "State3" then
+                            humanoid:ChangeState(Enum.HumanoidStateType.Freefall)
+                            task.wait(0.025)
+                            humanoid:ChangeState(Enum.HumanoidStateType.Landed)
                         end
                     end
                 end)
             end)
         else
-            pcall(function()
-                if DisablerConnection then
-                    DisablerConnection:Disconnect()
-                    DisablerConnection = nil
-                end
-            end)
+            if DisablerConnection then
+                DisablerConnection:Disconnect()
+                DisablerConnection = nil
+            end
         end
     end,
 })
 DisablerMethod = Disabler.NewPicker({
-    Name = "Method",
-    Options = {"State", "State2"}
+    Name = "StateBypassMethod",
+    Options = {"State", "State2", "State3"}
 })
 
 local TrollageConnection
@@ -2316,30 +2336,25 @@ YuziDash = RemoteTrollage.NewToggle({
 	Function = function() end
 })
 
---[[Uninject = Misc.NewButton({
+Uninject = Misc.NewButton({
 	Name = "Uninject",
 	Function = function(callback)
 		if callback then
-			task.wait(0.5)
-			for i,v in pairs(library.Modules) do
-				v(false)
-			end
-			library:Remove()
-			canLoadPolaris = false
+			ScreenGui:Destroy(library.Modules)
+            Uninject.ToggleButton(false)
 		end
 	end,
-})--]]
+})
 
-local humanoidRootPart = Character:WaitForChild("HumanoidRootPart")
 FastFall = Misc.NewButton({
 	Name = "FastFall",
 	Function = function(callback)
-		if Character and humanoidRootPart then
+		if Character and PrimaryPart then
             if callback then
                 if FallMode.Option == "Velocity" then
-                    humanoidRootPart.Velocity = Vector3.new(0, -999, 0)
+                    PrimaryPart.Velocity = Vector3.new(0, -999, 0)
                 elseif FallMode.Option == "Gravity" then
-                    workspace.Gravity = -999
+                    workspace.Gravity = 999
                 end
             else
                 workspace.Gravity = 196.2
@@ -2349,7 +2364,7 @@ FastFall = Misc.NewButton({
 })
 LocalPlayer.CharacterAdded:Connect(function(newCharacter)
     Character = newCharacter
-    humanoidRootPart = newCharacter:WaitForChild("HumanoidRootPart")
+    PrimaryPart = newCharacter:WaitForChild("PrimaryPart")
     if not FastFall.Enabled then
         workspace.Gravity = 196.2
     end
@@ -2357,11 +2372,182 @@ end)
 
 LocalPlayer.CharacterRemoving:Connect(function()
     Character = nil
-    humanoidRootPart = nil
+    PrimaryPart = nil
     workspace.Gravity = 196.2
 end)
 
 FallMode = FastFall.NewPicker({
     Name = "Mode",
     Options = {"Velocity", "Gravity"}
+})
+
+AntiDeath = Misc.NewButton({
+	Name = "AntiDeath",
+	Function = function(callback)
+		if callback then
+			local lastHit = tick()
+			local wasDisabled = false
+			repeat task.wait()
+				local nearest = getNearestPlayer(9e9)
+				if Humanoid.Health > 0 and Humanoid.Health < 35 and nearest.Character.Humanoid.Health > Humanoid.Health and not InfiniteFly.Enabled then
+					InfiniteFly.ToggleButton(true)
+					wasDisabled = true
+				end
+
+				if Humanoid.Health > 50 and InfiniteFly.Enabled and wasDisabled then
+					wasDisabled = false
+					InfiniteFly.ToggleButton(false)
+				end
+			until not AntiDeath.Enabled
+		else
+			if InfiniteFly.Enabled then InfiniteFly.ToggleButton(false) end
+		end
+	end,
+})
+
+local BridgeInstantConnection
+BridgeInstant = Exploit.NewButton({
+	Name = "BridgeInstaWin",
+	Function = function(callback)
+        if callback then
+            task.spawn(function()
+                BridgeInstantConnection = RunService.Heartbeat:Connect(function()
+                    task.wait()
+                    for i,v in workspace:GetDescendants() do
+                        if v:IsA('TouchTransmitter') then
+                            firetouchinterest(game.Players.LocalPlayer.Character.PrimaryPart, v.Parent, 1)
+                        end
+                    end
+                end)
+            end)
+        else
+            pcall(function()
+               BridgeInstantConnection:Disconnect()
+            end)
+        end
+	end,
+})
+
+function IsAlive(Player)
+	Player = Player or LocalPlayer
+
+	if not Player.Character then return false end
+	if not Player.Character:FindFirstChild("Humanoid") then return false end
+	if Player.Character:GetAttribute("Health") <= 0 then return false end
+	if not Player.Character.PrimaryPart then return false end	
+
+	return true
+end	
+
+local function GetServerPosition(Position)
+	local X = math.round(Position.X / 3)
+	local Y = math.round(Position.Y / 3)
+	local Z = math.round(Position.Z / 3)
+
+	return Vector3.new(X, Y, Z)
+end
+
+function FindNearestBed(MaxDistance)
+	local MaxDistance = MaxDistance or math.huge
+	local NearestBed = nil
+
+	for i, v in next, CollectionService:GetTagged("bed")do
+		if v:FindFirstChild("Blanket").BrickColor ~= LocalPlayer.Team.TeamColor then			
+			if v:GetAttribute("BedShieldEndTime") then 				
+				if v:GetAttribute("BedShieldEndTime") < Workspace:GetServerTimeNow() then
+					local Distance = (v.Position - LocalPlayer.Character.PrimaryPart.Position).Magnitude
+
+					if Distance < MaxDistance then
+						MaxDistance = Distance
+						NearestBed = v
+					end
+				end
+			end
+
+			if not v:GetAttribute("BedShieldEndTime") then
+				local Distance = (v.Position - LocalPlayer.Character.PrimaryPart.Position).Magnitude
+
+				if Distance < MaxDistance then
+					MaxDistance = Distance
+					NearestBed = v
+				end
+			end
+		end
+	end
+
+	return NearestBed
+end
+
+local DamageBlockRemote = game.ReplicatedStorage:WaitForChild("rbxts_include"):WaitForChild("node_modules"):WaitForChild("@easy-games"):WaitForChild("block-engine"):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged"):WaitForChild("DamageBlock")
+local NearestBedFound = false
+local CanSeeNearestBed = false
+
+local function Nuker(NearestBed)
+	task.spawn(function()
+		if NearestBed then
+			NearestBedFound = true
+
+			local NukerRaycastParameters = RaycastParams.new()
+			local TargetBlock = nil
+
+			NukerRaycastParameters.FilterType = Enum.RaycastFilterType.Exclude
+			NukerRaycastParameters.FilterDescendantsInstances = {LocalPlayer.Character}
+			NukerRaycastParameters.IgnoreWater = true
+
+			local RaycastResult = game.Workspace:Raycast(NearestBed.Position + Vector3.new(0, 30, 0), Vector3.new(0, -35, 0), NukerRaycastParameters)
+
+			task.spawn(function()
+				if RaycastResult then
+					if RaycastResult.Instance then
+						TargetBlock = RaycastResult.Instance
+					end
+
+					if not RaycastResult.Instance then
+						TargetBlock = NearestBed
+					end				
+
+					DamageBlockRemote:InvokeServer({
+						blockRef = {
+							blockPosition = GetServerPosition(TargetBlock.Position)
+						},
+
+						hitPosition = GetServerPosition(TargetBlock.Position),
+						hitNormal = GetServerPosition(TargetBlock.Position)
+					})
+				end
+			end)			
+
+			task.spawn(function()
+				local _, Value = CurrentCamera:WorldToScreenPoint(NearestBed.Position)
+
+				CanSeeNearestBed = Value
+			end)
+		end
+	end)
+end
+
+local NukerConnection
+Nuke = Exploit.NewButton({
+	Name = "BedNuker",
+	Function = function(callback)
+        if callback then
+            task.spawn(function()
+                NukerConnection = RunService.Heartbeat:Connect(function()
+                    task.wait()
+
+                    if IsAlive(LocalPlayer) then
+                        local NearestBed = FindNearestBed(30) or nil
+
+                            if NearestBed then
+                                Nuker(NearestBed)
+                            end
+                    end
+                end)
+            end)
+        else
+            pcall(function()
+                NukerConnection:Disconnect()
+            end)
+        end
+    end,
 })
